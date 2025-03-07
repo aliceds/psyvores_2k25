@@ -5,22 +5,225 @@
       <meta name="description" content="alphasec">
       <meta name="author" content="alphasec">
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-      <title>alphasec</title>
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
-      <link rel="stylesheet" href="static/css/styles.css">
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500&display=swap">
+      <title>Psyvores Festival</title>
+      <!-- Thème Quartz -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/quartz/bootstrap.min.css">
+      <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous"> -->
+      <!-- <link rel="stylesheet" href="static/css/styles.css"> -->
+      <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500&display=swap"> -->
       <link rel="icon" href="static/favicon.ico" type="image/x-icon">
+      <style>
+        .festival-bar {
+          height: 8px;
+          background-color: rgba(255, 193, 7, 0.7);
+          margin-top: 3px;
+          border-radius: 4px;
+          opacity: 0.8; /* Légère transparence */
+        }
+        .festival-container {
+          display: flex;
+          flex-direction: column;
+        }
+        .festival-bar.start {
+          border-top-left-radius: 4px;
+          border-bottom-left-radius: 4px;
+        }
+        .festival-bar.end {
+          border-top-right-radius: 4px;
+          border-bottom-right-radius: 4px;
+        }
+        .carousel-control-prev, .carousel-control-next {
+          width: auto;
+        }
+      </style>
   </head>
+
   <body>
-    <div class="row">
-      <h1 class="h1">titi tata toto</h1>
-    </div>
-    <div class="row">
-      <div>
+    <div class="container mt-4">
+      <h1 class="mb-4 text-center">Calendrier des Festivals</h1>
+      <div id="calendarCarousel" class="carousel slide" data-bs-interval="false">
+        <div class="carousel-inner">
+          {% for month, cal in calendars.items() %}
+          <div class="carousel-item {% if loop.first %}active{% endif %}">
+            <div class="card">
+              <div class="card-header text-center">
+                <h5>{{ month_names[month] }} {{ year }}</h5>
+              </div>
+              <div class="card-body">
+                <table class="table table-bordered text-center">
+                  <thead>
+                    <tr>
+                      <th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th>
+                      <th>Ven</th><th>Sam</th><th>Dim</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for week in cal %}
+                    <tr>
+                      {% for day in week %}
+                      <td>
+                        {% if day != 0 %}
+                          <div class="festival-container">
+                            <strong>{{ day }}</strong>
+                            {% for festival in festivals %}
+                              {% set festival_date = date(year, month, day) %}
+                              {% if festival.start_date <= festival_date <= festival.end_date %}
+                                <div class="festival-bar" 
+                                  style="background-color: {{ festival.color }};" 
+                                  {% if festival.start_date == festival_date %}class="start"{% endif %} 
+                                  {% if festival.end_date == festival_date %}class="end"{% endif %}>
+                                </div> 
+                              {% endif %}
+                            {% endfor %}
+                          </div>
+                        {% endif %}
+                      </td>
+                      {% endfor %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#calendarCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#calendarCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        </button>
       </div>
     </div>
-    <div class="row">
-      <span class="text-muted small">alphasec © 2024. All rights reserved.</span>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <div class="container">
+      <h2>
+        Festivals
+        <button class="btn btn-primary" onclick="addFestival()">Ajouter</button>
+      </h2>
+
+      <!-- Formulaire caché au départ -->
+      <div id="festival-form" style="display: none; margin-top: 20px;">
+        <form id="addFestivalForm">
+          <div class="mb-3">
+            <label for="name" class="form-label">Nom du festival</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="start_date" class="form-label">Date de début</label>
+            <input type="date" class="form-control" id="start_date" name="start_date" required>
+          </div>
+          <div class="mb-3">
+            <label for="end_date" class="form-label">Date de fin</label>
+            <input type="date" class="form-control" id="end_date" name="end_date" required>
+          </div>
+          <div class="mb-3">
+            <label for="picture" class="form-label">URL de l'image</label>
+            <input type="text" class="form-control" id="picture" name="picture">
+          </div>
+          <button type="submit" class="btn btn-success">Ajouter</button>
+          <button type="button" class="btn btn-danger" onclick="cancelForm()">Annuler</button>
+        </form>
+      </div>
+
+      <ul class="list-group">
+        {% for festival in festivals %}
+          <li>
+            {{ festival.name }} ({{ festival.start_date }} - {{ festival.end_date }})
+            <button class="btn btn-warning btn-sm" onclick="editFestival({{ festival.id }})">Modifier</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteFestival({{ festival.id }})">Supprimer</button>
+          </li>
+        {% endfor %}
+      </ul>
+
     </div>
-  </body>
+
+    <script>
+      function toggleForm() {
+        let form = document.getElementById("festival-form");
+        form.style.display = (form.style.display === "none") ? "block" : "none";
+      }
+    
+      function cancelForm() {
+        let form = document.getElementById("festival-form");
+        form.style.display = "none";  // Cache le formulaire
+      }
+
+      function addFestival() {
+        // Réinitialiser les champs du formulaire
+        document.getElementById("name").value = "";
+        document.getElementById("start_date").value = "";
+        document.getElementById("end_date").value = "";
+        document.getElementById("picture").value = "";
+
+        // Modifier l'action du formulaire pour une création
+        let form = document.getElementById("addFestivalForm");
+        form.onsubmit = function(event) {
+          event.preventDefault();  // Empêche le rechargement de la page
+
+          let formData = new FormData(form);
+
+          fetch("/festival/add", {
+            method: "POST",
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              location.reload();
+              toggleForm(); // Fermer le formulaire après ajout
+            } else {
+              alert("Erreur lors de l'ajout du festival.");
+            }
+          })
+          .catch(error => console.error("Erreur :", error));
+        };
+
+        // Changer le texte du bouton de soumission
+        let submitButton = form.querySelector('button[type="submit"]');
+        submitButton.textContent = "Ajouter";
+
+        // Ouvrir le formulaire
+        toggleForm();
+      }
+    
+      function editFestival(id) {
+        // Récupérer les informations du festival à partir du backend via AJAX
+        fetch(`/festival/${id}/edit`)
+          .then(response => response.json())
+          .then(festival => {
+            // Remplir les champs du formulaire avec les données du festival
+            document.getElementById("name").value = festival.name;
+            document.getElementById("start_date").value = festival.start_date;
+            document.getElementById("end_date").value = festival.end_date;
+            document.getElementById("picture").value = festival.picture;
+    
+            // Modifier l'action du formulaire pour qu'il fasse une mise à jour
+            let form = document.getElementById("addFestivalForm");
+            form.action = `/festival/${id}/update`;
+            let submitButton = form.querySelector('button[type="submit"]');
+            submitButton.textContent = 'Modifier';  // Changer le texte du bouton
+          });
+        toggleForm();  // Afficher le formulaire
+      }
+    
+      function deleteFestival(id) {
+        // Supprimer un festival via AJAX
+        fetch(`/festival/${id}/delete`, {
+          method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();  // Rafraîchit la page pour voir la mise à jour
+          } else {
+            alert("Erreur lors de la suppression !");
+          }
+        });
+      }
+    </script>
+
+</body>
 </html>
